@@ -32,7 +32,7 @@ Background {
 
     property string enteredUrl
 
-    property real _overlayHeight: browserPage.isPortrait ? toolBar.toolsHeight : 0
+    property real _overlayHeight: overlayAnimator._fullHeight
     property bool _showFindInPage
     property bool _showUrlEntry: true
     property bool _showInfoOverlay
@@ -105,7 +105,7 @@ Background {
         portrait: browserPage.isPortrait
         webView: overlay.webView
 
-        readonly property real _fullHeight: isPortrait ? overlay.toolBar.toolsHeight : 0
+        readonly property real _fullHeight: browserPage.isPortrait ? 0.3 * webView.fullscreenHeight : 0
         readonly property real _infoHeight: Math.max(webView.fullscreenHeight - overlay.toolBar.certOverlayPreferedHeight - overlay.toolBar.toolsHeight, 0)
 
         onAtBottomChanged: {
@@ -166,10 +166,14 @@ Background {
         id: dragArea
 
         property bool moved
-        property int dragThreshold: state === "fullscreenOverlay" ? toolBar.toolsHeight * 1.5
-                                                                  : state === "certOverlay"
-                                                                    ? (overlayAnimator._infoHeight + toolBar.toolsHeight * 0.5)
-                                                                    : (webView.fullscreenHeight - toolBar.toolsHeight * 2)
+        property int dragThreshold: {
+            if (state === "fullscreenOverlay")
+                return overlayAnimator._fullHeight + toolBar.toolsHeight * 1.5
+            else if (state === "certOverlay")
+                return overlayAnimator._infoHeight + toolBar.toolsHeight * 0.5
+            else
+                return webView.fullscreenHeight - toolBar.toolsHeight * 2
+        }
 
         width: parent.width
         height: historyContainer.height
@@ -186,9 +190,9 @@ Background {
             if (!drag.active) {
                 if (overlay.y < dragThreshold) {
                     if (state === "certOverlay") {
-                        overlayAnimator.showInfoOverlay(false)
+                        overlayAnimator.showInfoOverlay()
                     } else {
-                        overlayAnimator.showOverlay(false)
+                        overlayAnimator.showOverlay()
                     }
                 } else {
                     dismiss(true)
@@ -347,7 +351,10 @@ Background {
                     }
                 }
 
-                opacity: toolBar.crossfadeRatio * -1.0
+                readonly property real openPosition: browserPage.height - toolBar.height - overlayAnimator._fullHeight
+                readonly property real delta: overlay.y - overlayAnimator._fullHeight
+
+                opacity: (openPosition - delta) / openPosition
                 visible: opacity > 0.0 && y >= -searchField.height
 
                 onYChanged: {
@@ -419,13 +426,12 @@ Background {
             Browser.ToolBar {
                 id: toolBar
 
-                property real crossfadeRatio: (_showFindInPage || _showUrlEntry) ? (overlay.y - webView.fullscreenHeight/2)  / (webView.fullscreenHeight/2 - toolBar.height) : 1.0
-
                 url: webView.contentItem && webView.contentItem.url || ""
                 findText: searchField.text
                 bookmarked: bookmarkModel.activeUrlBookmarked
 
-                opacity: textSelectionToolbar.active ? 0.0 : crossfadeRatio
+                opacity: textSelectionToolbar.active ? 0.0 : 1.0 - searchField.opacity
+
                 Behavior on opacity {
                     enabled: overlayAnimator.atBottom
                     FadeAnimation {}
