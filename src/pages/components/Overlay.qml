@@ -188,7 +188,7 @@ Background {
 
         drag.onActiveChanged: {
             if (!drag.active) {
-                if (overlay.y < dragThreshold) {
+                if (overlay.y < dragThreshold || overlayAnimator.direction === "upwards") {
                     if (state === "certOverlay") {
                         overlayAnimator.showInfoOverlay()
                     } else {
