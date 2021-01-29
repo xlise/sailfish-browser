@@ -62,6 +62,22 @@ WebContainer {
 
     property var linkHandler: LinkHandler {}
 
+    property var searchEngine: SearchEngine {
+        property var browserSettings: BrowserSettings {}
+        property var notice: Notice {
+            verticalOffset: -webView.toolbarHeight
+            duration: 3000
+            //% "OpenSearch engine available"
+            text: qsTrId("sailfish_browser-la-opensearch_engine_available")
+        }
+
+        function searchEngines() {
+            return browserSettings.searchEngineList;
+        }
+
+        available: false
+    }
+
     function stop() {
         if (contentItem) {
             contentItem.stop()
@@ -206,6 +222,8 @@ WebContainer {
                 if (!modelUrl || modelUrl != url) {
                     tabModel.updateThumbnailPath(tabId, "")
                 }
+
+                webView.searchEngine.available = false
             }
 
             onBgcolorChanged: {
@@ -316,6 +334,15 @@ WebContainer {
                 case "embed:OpenLink": {
                     linkHandler.handleLink(data.uri)
                     break
+                }
+                case "Link:AddSearch": {
+                    if (searchEngine.searchEngines().indexOf(data.engine.title) == -1) {
+                        searchEngine.available = true
+                        searchEngine.get = data.url
+                        searchEngine.href = data.engine.href
+                        searchEngine.title = data.engine.title
+                        searchEngine.notice.show()
+                    }
                 }
                 }
             }

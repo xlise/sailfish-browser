@@ -10,29 +10,36 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "iconfetcher.h"
+#include "opensearchconfigs.h"
+
+#include <webengine.h>
 
 #include <QImage>
+#include <QUrl>
+#include <QDir>
+#include <QFile>
 
 IconFetcher::IconFetcher(QObject *parent)
     : QObject(parent)
     , m_status(Null)
     , m_minimumIconSize(64) // Initial value that matches theme iconSizeMedium.
     , m_hasAcceptedTouchIcon(false)
+    , m_url(NULL)
 {
 }
 
 void IconFetcher::fetch(const QString &iconUrl)
 {
     updateAcceptedTouchIcon(false);
-    QUrl url(iconUrl);
-    QString path = url.path();
+    m_url = new QUrl(iconUrl);
+    QString path = m_url->path();
     updateStatus(Fetching);
     if (path.endsWith(".ico") || iconUrl.isEmpty()) {
         m_data = defaultIcon();
         updateStatus(Ready);
         emit dataChanged();
     } else {
-        QNetworkRequest request(url);
+        QNetworkRequest request(*m_url);
         QNetworkReply *reply = m_networkAccessManager.get(request);
         connect(reply, &QNetworkReply::finished, this, &IconFetcher::dataReady);
         // qOverload(T functionPointer) would be handy to resolve right error method but it is introduced only
@@ -66,13 +73,13 @@ void IconFetcher::dataReady()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     if (reply) {
-        QByteArray iconData = reply->readAll();
+        m_networkData = reply->readAll();
         QImage image;
-        image.loadFromData(iconData);
+        image.loadFromData(m_networkData);
         if (image.width() < m_minimumIconSize || image.height() < m_minimumIconSize) {
             m_data = defaultIcon();
         } else {
-            m_data = QString(BASE64_IMAGE).arg(QString(iconData.toBase64()));
+            m_data = QString(BASE64_IMAGE).arg(QString(m_networkData.toBase64()));
         }
         reply->deleteLater();
 
@@ -112,4 +119,34 @@ void IconFetcher::updateAcceptedTouchIcon(bool acceptedTouchIcon)
         m_hasAcceptedTouchIcon = acceptedTouchIcon;
         emit hasAcceptedTouchIconChanged();
     }
+}
+
+bool IconFetcher::saveAsSearchEngine()
+{
+    if (!m_url || m_networkData.isEmpty())
+        return false;
+
+    bool rv = false;
+    QUrl url = QUrl::fromLocalFile(OpenSearchConfigs::getOpenSearchConfigPath() + m_url->host() + ".xml");
+    QDir dir;
+    if (dir.mkpath(url.toString(QUrl::RemoveScheme | QUrl::RemoveFilename))) {
+        QFile file(url.path());
+        if (file.open(QIODevice::WriteOnly)) {
+            if (file.write(m_networkData) > 0) {
+                rv = true;
+            }
+            file.close();
+
+            if (rv) {
+                // Inform WebEngine there's a new search xml
+                QVariantMap loadsearch;
+                loadsearch.insert(QLatin1String("msg"), QVariant(QLatin1String("loadxml")));
+                loadsearch.insert(QLatin1String("uri"), QVariant(url.toString()));
+                loadsearch.insert(QLatin1String("confirm"), QVariant(false));
+                SailfishOS::WebEngine::instance()->notifyObservers(QLatin1String("embedui:search"), QVariant(loadsearch));
+            }
+        }
+    }
+
+    return rv;
 }

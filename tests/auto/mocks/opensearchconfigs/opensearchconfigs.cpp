@@ -20,3 +20,8 @@ const QStringList OpenSearchConfigs::getSearchEngineList()
 {
     return QStringList();
 }
+
+const QString OpenSearchConfigs::getOpenSearchConfigPath()
+{
+    return QString();
+}

@@ -32,6 +32,7 @@ public:
     explicit IconFetcher(QObject *parent = 0);
 
     Q_INVOKABLE void fetch(const QString &iconUrl);
+    Q_INVOKABLE bool saveAsSearchEngine();
 
     Status status() const;
     QString data() const;
@@ -57,6 +58,8 @@ private:
     QString m_data;
     qreal m_minimumIconSize;
     bool m_hasAcceptedTouchIcon;
+    QByteArray m_networkData;
+    QUrl *m_url;
 };
 
 

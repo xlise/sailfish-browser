@@ -20,7 +20,7 @@ OpenSearchConfigs *OpenSearchConfigs::openSearchConfigs = 0;
 OpenSearchConfigs::OpenSearchConfigs(QObject *parent):QObject(parent)
 {
     m_openSearchPathList << QString(EMBEDLITE_CONTENT_PATH);
-    m_openSearchPathList << QDir::homePath() + USER_OPENSEARCH_PATH;
+    m_openSearchPathList << getOpenSearchConfigPath();
 }
 
 const StringMap OpenSearchConfigs::parseOpenSearchConfigs()
@@ -74,4 +74,9 @@ const QStringList OpenSearchConfigs::getSearchEngineList()
 const StringMap OpenSearchConfigs::getAvailableOpenSearchConfigs()
 {
     return getInstance()->parseOpenSearchConfigs();
+}
+
+const QString OpenSearchConfigs::getOpenSearchConfigPath()
+{
+    return QDir::homePath() + USER_OPENSEARCH_PATH;
 }

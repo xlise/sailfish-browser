@@ -1,3 +1,5 @@
+PKGCONFIG += sailfishwebengine
+
 INCLUDEPATH += $$PWD
 
 # C++ sources

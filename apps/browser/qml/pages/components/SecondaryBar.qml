@@ -22,11 +22,17 @@ Column {
     property bool bookmarked
     property int horizontalOffset
     property int iconWidth
-    property real midIconWidth: iconWidth + (iconWidth - forwardButton.width) / 4
+    property real midIconWidth: iconWidth + (iconWidth - forwardButton.width) / (4 + webView.searchEngine.available)
 
     width: parent.width
     height: isPortrait ? Settings.toolbarLarge : Settings.toolbarSmall
     clip: opacity < 1.0
+
+    Connections {
+        target: webView.searchEngine
+
+        onEngineSaved: openSearchNotice.show()
+    }
 
     OverlayListItem {
         height: overlay.toolBar.rowHeight
@@ -95,10 +101,10 @@ Column {
             onTapped: webView.goForward()
         }
 
-        // Spacer for pushing Search, Bookmark, Share, Downloads to the right hand side
+        // Spacer for pushing Search, Bookmark, Share, SearchEngine, Downloads to the right hand side
         Item {
             height: parent.height
-            width: parent.width - addTabButton.width - forwardButton.width - midIconWidth * 4 - downloadsButton.width
+            width: parent.width - addTabButton.width - forwardButton.width - midIconWidth * (4 + webView.searchEngine.available) - downloadsButton.width
         }
 
         Shared.IconButton {
@@ -133,6 +139,13 @@ Column {
 
         Shared.IconButton {
             width: midIconWidth
+            icon.source: "image://theme/icon-m-share"
+            visible: webView.searchEngine.available
+            onTapped: webView.searchEngine.addSearchEngine()
+        }
+
+        Shared.IconButton {
+            width: midIconWidth
             icon.source: "image://theme/icon-m-file-download-as-pdf"
             active: webView.contentItem && webView.contentItem.active && !webView.loading
             onTapped: {
@@ -158,6 +171,14 @@ Column {
         duration: 3000
         //% "Already saving pdf"
         text: qsTrId("sailfish_browser-la-already_printing_pdf")
+        verticalOffset: -overlay.toolBar.rowHeight * overlay.toolBar.maxRowCount
+    }
+
+    Notice {
+        id: openSearchNotice
+        duration: 3000
+        //% "OpenSearch engine saved"
+        text: qsTrId("sailfish_browser-la-opensearch_engine_saved")
         verticalOffset: -overlay.toolBar.rowHeight * overlay.toolBar.maxRowCount
     }
 

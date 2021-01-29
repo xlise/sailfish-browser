@@ -20,6 +20,7 @@ class OpenSearchConfigs : public QObject {
 public:
     static const StringMap getAvailableOpenSearchConfigs();
     static const QStringList getSearchEngineList();
+    static const QString getOpenSearchConfigPath();
 
 private:
     OpenSearchConfigs(QObject* parent=0);
