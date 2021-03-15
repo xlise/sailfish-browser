@@ -618,10 +618,10 @@ Shared.Background {
 
             onStatusChanged: browserPage.tabPageActive = (status == PageStatus.Active)
 
-            Browser.TabGridView {
+            Browser.TabView {
                 id: tabViewItem
 
-                model: webView.tabModel
+                tabModel: webView.tabModel
                 portrait: tabPage.isPortrait
                 privateMode: webView.privateMode
 

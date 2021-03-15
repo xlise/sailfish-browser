@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2014 - 2019 Jolla Ltd.
-** Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+** Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -47,11 +47,7 @@ SilicaGridView {
     height: parent.height
     x: Theme.horizontalPageMargin
     currentIndex: -1
-    header: PageHeader {
-        //: Tabs
-        //% "Tabs"
-        title: qsTrId("sailfish_browser-he-tabs")
-    }
+    header: spacer
     footer: spacer
     cellHeight: thumbnailHeight + Theme.paddingLarge
     cellWidth: thumbnailWidth + Theme.paddingLarge
@@ -76,14 +72,6 @@ SilicaGridView {
 
     // Behind tab delegates
     children: [
-        PrivateModeTexture {
-            z: -1
-            visible: opacity > 0.0
-            opacity: privateMode ? 1.0 : 0.0
-
-            Behavior on opacity { FadeAnimation {} }
-        },
-
         MouseArea {
             z: -1
             width: tabView.width
@@ -103,23 +91,6 @@ SilicaGridView {
 
         flickable: tabView
 
-        MenuItem {
-            text: tabView.privateMode ?
-                    //: Menu item switching back to normal browser
-                    //% "Normal browsing"
-                    qsTrId("sailfish_browser-me-normal_browsing") :
-                    //: Menu item switching to private browser
-                    //% "Private browsing"
-                    qsTrId("sailfish_browser-me-private_browsing")
-            onDelayedClick: {
-                if (remorsePopup) {
-                    remorsePopup.trigger()
-                }
-
-                tabView.privateMode = !tabView.privateMode
-
-            }
-        }
         MenuItem {
             visible: showCloseAllAction.value && webView.tabModel.count
             //% "Close all tabs"
