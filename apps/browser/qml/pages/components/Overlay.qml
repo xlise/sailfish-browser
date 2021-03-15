@@ -574,7 +574,7 @@ Shared.Background {
             Browser.TabView {
                 id: tabViewItem
 
-                model: webView.tabModel
+                tabModel: webView.tabModel
                 portrait: tabPage.isPortrait
                 privateMode: webView.privateMode
 
