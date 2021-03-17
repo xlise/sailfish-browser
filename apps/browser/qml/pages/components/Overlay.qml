@@ -577,6 +577,7 @@ Shared.Background {
                 tabModel: webView.tabModel
                 portrait: tabPage.isPortrait
                 privateMode: webView.privateMode
+                toolBarHeight: toolBar.rowHeight
 
                 onHide: pageStack.pop()
 

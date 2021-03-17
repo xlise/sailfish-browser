@@ -17,13 +17,13 @@ import org.nemomobile.configuration 1.0
 import "." as Browser
 import "../../shared" as Shared
 
-Private.TabView {
-    id: tabs
+Item {
+    id: root
 
     property bool portrait
     property bool privateMode
     property var tabModel
-
+    property int toolBarHeight
     signal hide
     signal enterNewTabUrl
     signal activateTab(int index)
@@ -34,93 +34,149 @@ Private.TabView {
 
     anchors.fill: parent
 
-    header: Private.TabBar {
-        id: header
-        model: headerModel
-        Shared.Background {
-            anchors.fill: parent
+    Private.TabView {
+        id: tabs
+
+        anchors {
+            fill: parent
+            bottomMargin: tabsToolBar.height
+        }
+
+        header: Private.TabBar {
+            id: header
+            model: headerModel
+            Shared.Background {
+                anchors.fill: parent
+                z: -1
+            }
+        }
+
+        model: [ persistentTabView, privateTabView ]
+
+        onCurrentIndexChanged: {
+            // TODO: Add remorsePopup
+            // if (remorsePopup) {
+            //     remorsePopup.trigger()
+            // }
+            privateMode = currentIndex !== 0
+        }
+        Component.onCompleted: {
+            persistentIcon.updateGrubImage()
+            privateIcon.updateGrubImage()
+            currentIndex = privateMode
+        }
+
+        PrivateModeTexture {
             z: -1
+            visible: opacity > 0.0
+            opacity: privateMode ? 1.0 : 0.0
+
+            Behavior on opacity { FadeAnimation {} }
         }
-    }
 
-    model: [ persistentTabView, privateTabView ]
+        Component {
+            id: persistentTabView
 
-    onCurrentIndexChanged: {
-        // TODO: Add remorsePopup
-        // if (remorsePopup) {
-        //     remorsePopup.trigger()
-        // }
-        privateMode = currentIndex !== 0
-    }
-    Component.onCompleted: {
-        persistentIcon.updateGrubImage()
-        privateIcon.updateGrubImage()
-        currentIndex = privateMode
-    }
+            Private.TabItem {
+                TabGridView {
+                    id: _persistentTabView
+                    privateMode: false
+                    portrait: root.portrait
+                    model: root.tabModel
 
-    PrivateModeTexture {
-        z: -1
-        visible: opacity > 0.0
-        opacity: privateMode ? 1.0 : 0.0
-
-        Behavior on opacity { FadeAnimation {} }
-    }
-
-    Component {
-        id: persistentTabView
-
-        Private.TabItem {
-            TabGridView {
-                id: _persistentTabView
-                privateMode: false
-                portrait: tabs.portrait
-                model: tabs.tabModel
-
-                onHide: tabs.hide()
-                onEnterNewTabUrl: tabs.enterNewTabUrl()
-                onActivateTab: tabs.activateTab(index)
-                onCloseTab: tabs.closeTab(index)
-                onCloseAll: tabs.closeAll()
-                onCloseAllCanceled: tabs.closeAllCanceled()
-                onCloseAllPending: tabs.closeAllPending()
+                    onHide: root.hide()
+                    onEnterNewTabUrl: root.enterNewTabUrl()
+                    onActivateTab: root.activateTab(index)
+                    onCloseTab: root.closeTab(index)
+                    onCloseAll: root.closeAll()
+                    onCloseAllCanceled: root.closeAllCanceled()
+                    onCloseAllPending: root.closeAllPending()
+                }
             }
         }
-    }
-    Component {
-        id: privateTabView
-        Private.TabItem {
-            allowDeletion: false
-            TabGridView {
-                id: _privateTabView
-                privateMode: true
-                portrait: tabs.portrait
-                model: tabs.tabModel
+        Component {
+            id: privateTabView
+            Private.TabItem {
+                allowDeletion: false
+                TabGridView {
+                    id: _privateTabView
+                    privateMode: true
+                    portrait: root.portrait
+                    model: root.tabModel
 
-                onHide: tabs.hide()
-                onEnterNewTabUrl: tabs.enterNewTabUrl()
-                onActivateTab: tabs.activateTab(index)
-                onCloseTab: tabs.closeTab(index)
-                onCloseAll: tabs.closeAll()
-                onCloseAllCanceled: tabs.closeAllCanceled()
-                onCloseAllPending: tabs.closeAllPending()
+                    onHide: root.hide()
+                    onEnterNewTabUrl: root.enterNewTabUrl()
+                    onActivateTab: root.activateTab(index)
+                    onCloseTab: root.closeTab(index)
+                    onCloseAll: root.closeAll()
+                    onCloseAllCanceled: root.closeAllCanceled()
+                    onCloseAllPending: root.closeAllPending()
+                }
             }
         }
-    }
 
-    ListModel {
-        id: headerModel
+        ListModel {
+            id: headerModel
 
-        ListElement {
-            iconSource: ""
+            ListElement {
+                iconSource: ""
+            }
+            ListElement {
+                iconSource: ""
+            }
         }
-        ListElement {
-            iconSource: ""
-        }
-    }
 
-    function _updateHeaderModel() {
-        headerModel.set(0, { "iconSource": persistentIcon.grabIcon })
-        headerModel.set(1, { "iconSource": privateIcon.grabIcon })
+        function _updateHeaderModel() {
+            headerModel.set(0, { "iconSource": persistentIcon.grabIcon })
+            headerModel.set(1, { "iconSource": privateIcon.grabIcon })
+        }
+
+        children: [
+            Image {
+                id: persistentIcon
+                property string grabIcon
+
+                source: "image://theme/icon-m-tabs"
+                Label {
+                    anchors.centerIn: parent
+                    text: webView.persistentTabModel.count
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.bold: true
+                }
+
+                function updateGrubImage() {
+                    persistentIcon.grabToImage(function(result) {
+                        grabIcon = result.url
+                        tabs._updateHeaderModel()
+                    });
+                }
+            },
+
+            Image {
+                id: privateIcon
+                property string grabIcon
+
+                source: "image://theme/icon-m-incognito"
+                Label {
+                    anchors.centerIn: parent
+                    text: webView.privateTabModel.count
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.bold: true
+                }
+
+                function updateGrubImage() {
+                    privateIcon.grabToImage(function(result) {
+                        grabIcon = result.url
+                        tabs._updateHeaderModel()
+                    });
+                }
+            }
+        ]
+    }
+    TabsToolBar {
+        id: tabsToolBar
+        anchors.bottom: parent.bottom
+        height: toolBarHeight
     }
 
     Connections {
@@ -130,46 +186,4 @@ Private.TabView {
             privateIcon.updateGrubImage()
         }
     }
-
-    children: [
-        Image {
-            id: persistentIcon
-            property string grabIcon
-
-            source: "image://theme/icon-m-tabs"
-            Label {
-                anchors.centerIn: parent
-                text: webView.persistentTabModel.count
-                font.pixelSize: Theme.fontSizeExtraSmall
-                font.bold: true
-            }
-
-            function updateGrubImage() {
-                persistentIcon.grabToImage(function(result) {
-                    grabIcon = result.url
-                    _updateHeaderModel()
-                });
-            }
-        },
-
-        Image {
-            id: privateIcon
-            property string grabIcon
-
-            source: "image://theme/icon-m-incognito"
-            Label {
-                anchors.centerIn: parent
-                text: webView.privateTabModel.count
-                font.pixelSize: Theme.fontSizeExtraSmall
-                font.bold: true
-            }
-
-            function updateGrubImage() {
-                privateIcon.grabToImage(function(result) {
-                    grabIcon = result.url
-                    _updateHeaderModel()
-                });
-            }
-        }
-    ]
 }
