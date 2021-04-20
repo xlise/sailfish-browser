@@ -86,39 +86,39 @@ SilicaGridView {
         defaultValue: true
     }
 
-    PullDownMenu {
-        id: pullDownMenu
+//    PullDownMenu {
+//        id: pullDownMenu
 
-        flickable: tabView
+//        flickable: tabView
 
-        MenuItem {
-            visible: showCloseAllAction.value && webView.tabModel.count
-            //% "Close all tabs"
-            text: qsTrId("sailfish_browser-me-close_all")
-            onClicked: {
-                remorsePopup = Remorse.popupAction(
-                            tabView,
-                            //% "Closed all tabs"
-                            qsTrId("sailfish_browser-closed-all-tabs"),
-                            function() {
-                                tabView.closeAll()
-                                remorsePopup = null
-                            })
-                closingAllTabs = true
-                remorsePopup.canceled.connect(
-                            function() {
-                                closingAllTabs = false
-                                tabView.closeAllCanceled()
-                                remorsePopup = null
-                            })
-            }
-        }
-        MenuItem {
-            //% "New tab"
-            text: qsTrId("sailfish_browser-me-new_tab")
-            onClicked: tabView.enterNewTabUrl()
-        }
-    }
+//        MenuItem {
+//            visible: showCloseAllAction.value && webView.tabModel.count
+//            //% "Close all tabs"
+//            text: qsTrId("sailfish_browser-me-close_all")
+//            onClicked: {
+//                remorsePopup = Remorse.popupAction(
+//                            tabView,
+//                            //% "Closed all tabs"
+//                            qsTrId("sailfish_browser-closed-all-tabs"),
+//                            function() {
+//                                tabView.closeAll()
+//                                remorsePopup = null
+//                            })
+//                closingAllTabs = true
+//                remorsePopup.canceled.connect(
+//                            function() {
+//                                closingAllTabs = false
+//                                tabView.closeAllCanceled()
+//                                remorsePopup = null
+//                            })
+//            }
+//        }
+//        MenuItem {
+//            //% "New tab"
+//            text: qsTrId("sailfish_browser-me-new_tab")
+//            onClicked: tabView.enterNewTabUrl()
+//        }
+//    }
 
     VerticalScrollDecorator {
         flickable: tabView

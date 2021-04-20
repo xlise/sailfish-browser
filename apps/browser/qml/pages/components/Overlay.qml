@@ -625,6 +625,9 @@ Shared.Background {
                 portrait: tabPage.isPortrait
                 privateMode: webView.privateMode
 
+                scaledPortraitHeight: toolBar.scaledPortraitHeight
+                scaledLandscapeHeight: toolBar.scaledLandscapeHeight
+
                 onHide: pageStack.pop()
 
                 onPrivateModeChanged: {
